@@ -1,0 +1,29 @@
+# Ignore node_modules folder
+node_modules
+
+# Ignore test files
+*.test.js
+*.spec.js
+
+# Ignore development files
+*.log
+*.ts
+*.tsx
+*.map
+
+# Ignore build configurations
+.babelrc
+tsconfig.json
+webpack.config.js
+yarn-error.log
+
+# Ignore dotfiles
+.git
+.gitignore
+
+# Ignore source folder
+src
+
+# Ignore dist folder if it's not needed
+# If you're building your code into dist and you need to include it, do not ignore dist
+# dist
