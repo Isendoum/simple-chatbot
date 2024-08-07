@@ -7,7 +7,7 @@ module.exports = [
       path: path.resolve(__dirname, "dist"),
       filename: "index.js",
       library: {
-        name: "IccServiceBot",
+        name: "simple-chatbot",
         type: "umd",
         export: "default",
       },
@@ -20,7 +20,7 @@ module.exports = [
       rules: [
         {
           test: /\.(js|jsx|ts|tsx)$/,
-          exclude: /node_modules\/(?!(@tiptap)\/).*/,
+          exclude: /node_modules\/.*/,
           use: "babel-loader",
         },
       ],
@@ -61,7 +61,7 @@ module.exports = [
       rules: [
         {
           test: /\.(js|jsx|ts|tsx)$/,
-          exclude: /node_modules\/(?!(@tiptap)\/).*/,
+          exclude: /node_modules\/.*/,
           use: "babel-loader",
         },
       ],
