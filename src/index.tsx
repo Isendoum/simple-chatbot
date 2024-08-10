@@ -1,6 +1,6 @@
+"use client";
 import React, { ChangeEvent, useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import ReactDOM from "react-dom";
 import { FaPaperPlane, FaWindowClose } from "react-icons/fa";
 
 const ChatbotWrapper = styled.div<{ isOpen: boolean }>`
@@ -59,7 +59,7 @@ const ChatHistory = styled.div`
   display: flex;
   flex-direction: column;
   border: 1px solid #ccc;
-  user-select: text; /* Ensure text selection is allowed */
+  user-select: text;
 `;
 
 const MessageContainer = styled.div`
@@ -113,60 +113,40 @@ const ChatSendButton = styled.button`
   }
 `;
 
-const ErrorMessage = styled.div`
-  width: 100%;
-  border: 1px solid red;
-  background-color: #f8d7da;
-  color: #721c24;
-  border-radius: 5px;
-  text-align: center;
-`;
-
 const LoadingMessage = styled.div`
   width: 100%;
   padding: 10px;
   text-align: center;
 `;
 
-const Chatbot: React.FC<{ keypass?: string }> = ({ keypass }) => {
+interface Message {
+  sender: "user" | "bot";
+  text: string;
+}
+
+interface ChatbotProps {
+  botName?: string;
+  messages: Message[];
+  onSendMessage: (message: string) => void;
+}
+
+const Chatbot: React.FC<ChatbotProps> = ({
+  botName = "Chatbot",
+  messages,
+  onSendMessage,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ sender: string; text: string }[]>(
-    []
-  );
-  const [name, setName] = useState<string>("Chatbot");
-  const [inputValue, setInputValue] = useState("Type your question");
-  const [isValidKeypass, setIsValidKeypass] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const chatbotRef = useRef<HTMLDivElement>(null);
   const chatHistoryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && isValidKeypass === null) {
-      setIsLoading(true);
-      // Simulate server call to validate keypass
-      setTimeout(() => {
-        setIsLoading(false);
-        if (keypass === "valid-key") {
-          setName("Client bot name");
-          setIsValidKeypass(true);
-        } else {
-          setIsValidKeypass(false);
-        }
-      }, 400); // Simulate a 400 millisecond delay for the server call
-    }
-  }, [isOpen, keypass, isValidKeypass]);
-
-  useEffect(() => {
-    if (chatHistoryRef.current) {
+    if (isOpen && chatHistoryRef.current) {
       chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [isOpen, messages]);
 
   const toggleChatbot = () => {
-    if (isValidKeypass === false) {
-      setIsValidKeypass(null); // Reset validation state for revalidation
-    }
     setIsOpen(!isOpen);
   };
 
@@ -174,83 +154,10 @@ const Chatbot: React.FC<{ keypass?: string }> = ({ keypass }) => {
     setInputValue(e.target.value);
   };
 
-  const chatCompletion = async (
-    userMessage: string,
-    onMessage: (message: string) => void
-  ) => {
-    try {
-      const response = await fetch(
-        `http://localhost:${process.env.REACT_APP_CHATBOT_PORT}/api/chat-completion`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: [{ role: "user", content: userMessage }],
-          }),
-        }
-      );
-
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let done = false;
-      let botMessage = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value);
-
-        // Extract message content from the stream data
-        const dataArray = chunkValue.split("\n").filter(Boolean);
-        dataArray.forEach((data) => {
-          if (data.startsWith("data: ")) {
-            const jsonString = data.slice(6).trim();
-            if (jsonString !== "[DONE]") {
-              try {
-                const json = JSON.parse(jsonString);
-                const content = json.choices[0].delta.content;
-                if (content) {
-                  botMessage += content;
-                  onMessage(botMessage);
-                }
-              } catch (e) {
-                console.error("Error parsing JSON from stream:", e);
-              }
-            }
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching chat completion:", error);
-      onMessage("Sorry, I encountered an error while processing your request.");
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (inputValue.trim()) {
-      const userMessage = inputValue;
-      setMessages([...messages, { sender: "user", text: userMessage }]);
+  const handleSendMessage = () => {
+    if (onSendMessage && inputValue.trim()) {
+      onSendMessage(inputValue);
       setInputValue("");
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { sender: "bot", text: "..." },
-      ]);
-
-      chatCompletion(userMessage, (botMessage) => {
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages];
-          updatedMessages[updatedMessages.length - 1] = {
-            sender: "bot",
-            text: botMessage,
-          };
-          return updatedMessages;
-        });
-      });
     }
   };
 
@@ -259,54 +166,36 @@ const Chatbot: React.FC<{ keypass?: string }> = ({ keypass }) => {
       {!isOpen && (
         <ChatbotButton onClick={toggleChatbot}>{"Chat"}</ChatbotButton>
       )}
-      <ChatbotWrapper isOpen={isOpen} ref={chatbotRef}>
+      <ChatbotWrapper isOpen={isOpen} ref={chatHistoryRef}>
         <CloseButton onClick={toggleChatbot}>
           <FaWindowClose />
         </CloseButton>
-        <h2>{name}</h2>
-        {isLoading ? (
-          <LoadingMessage>Loading...</LoadingMessage>
-        ) : isValidKeypass === false ? (
-          <ErrorMessage>
-            Error: Chatbot is not registered. Please provide a valid keypass.
-          </ErrorMessage>
-        ) : (
-          <>
-            <ChatHistory ref={chatHistoryRef}>
-              {messages.map((message, index) => (
-                <MessageContainer key={index}>
-                  <MessageSender>
-                    {message.sender === "user" ? "You: " : "Bot: "}
-                  </MessageSender>
-                  <MessageText>{message.text}</MessageText>
-                </MessageContainer>
-              ))}
-            </ChatHistory>
-
-            <ChatInputContainer>
-              <ChatInput
-                rows={2}
-                ref={inputRef}
-                value={inputValue}
-                onChange={handleInputChange}
-                placeholder="Type a message..."
-              />
-              <ChatSendButton onClick={handleSendMessage}>
-                <FaPaperPlane />
-              </ChatSendButton>
-            </ChatInputContainer>
-          </>
-        )}
+        <h2>{botName}</h2>
+        <ChatHistory ref={chatHistoryRef}>
+          {messages.map((message, index) => (
+            <MessageContainer key={index}>
+              <MessageSender>
+                {message.sender === "user" ? "You: " : "Bot: "}
+              </MessageSender>
+              <MessageText>{message.text}</MessageText>
+            </MessageContainer>
+          ))}
+        </ChatHistory>
+        <ChatInputContainer>
+          <ChatInput
+            rows={2}
+            ref={inputRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="Type a message..."
+          />
+          <ChatSendButton onClick={handleSendMessage}>
+            <FaPaperPlane />
+          </ChatSendButton>
+        </ChatInputContainer>
       </ChatbotWrapper>
     </>
   );
-};
-
-(window as any).injectChatbot = function (options: { keypass: string }) {
-  const { keypass } = options;
-  const container = document.createElement("div");
-  document.body.appendChild(container);
-  ReactDOM.render(<Chatbot keypass={keypass} />, container);
 };
 
 export default Chatbot;

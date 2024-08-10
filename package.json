@@ -6,9 +6,7 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist",
-    "server.js",
-    "bin"
+    "dist"
   ],
   "scripts": {
     "start-server": "node server.js",
@@ -16,9 +14,6 @@
     "build:types": "tsc --emitDeclarationOnly",
     "prepare": "npm run build && npm run build:types",
     "simple-chatbot": "./bin/start-server.js"
-  },
-  "bin": {
-    "simple-chatbot": "node ./bin/start-server.js"
   },
   "keywords": [
     "chatbot"
