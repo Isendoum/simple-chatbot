@@ -1,4 +1,3 @@
-````markdown
 # Simple Chatbot
 
 A simple and customizable React chatbot component that allows you to easily integrate a chatbot UI into your application. This package is designed to be flexible, allowing developers to manage message handling and API requests externally.
@@ -10,7 +9,6 @@ You can install `simple-chatbot` via npm or yarn:
 ```bash
 npm install simple-chatbot
 ```
-````
 
 or
 
