@@ -1,6 +1,6 @@
 {
   "name": "simple-chatbot",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple chatbot",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
