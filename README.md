@@ -1,5 +1,3 @@
-Here's the content converted to a proper Markdown file:
-
 ````markdown
 # Simple Chatbot
 
@@ -140,8 +138,3 @@ export default App;
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
-
-```
-
-This Markdown file now properly formats the content, including headers, code blocks, and tables. It provides a clear structure for the README, making it easy for developers to understand how to use the `simple-chatbot` package.
-```
